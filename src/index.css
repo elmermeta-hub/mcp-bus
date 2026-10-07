@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --color-surface: #F8FAFC;
+    --color-surface-card: #FFFFFF;
+    --color-primary: #5B1B6A;
+    --color-primary-hover: #722082;
+    --color-primary-tint: #F6EEF8;
+    --color-orange: #EA580C;
+    --color-orange-tint: #FFF4ED;
+    --color-crowd-green: #16A34A;
+    --color-crowd-amber: #D97706;
+    --color-crowd-red: #DC2626;
+    --color-wab: #0284C7;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-surface);
+    color: #111C2D;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+.font-heading {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+.font-sans {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes live-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+.animate-live-pulse {
+  animation: live-pulse 1.8s ease-in-out infinite;
+}

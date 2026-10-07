@@ -1,0 +1,6 @@
+{
+  "name": "Singapore Civic Transit Pulse",
+  "description": "Real-time Singapore public transport companion featuring live SBS Transit & SMRT bus arrival countdowns, LTA crowd capacity occupancy, MRT line statuses, and interactive interchange radar.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
