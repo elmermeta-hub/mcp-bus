@@ -53,6 +53,7 @@ export default function App() {
   const [transactions, setTransactions] = useState<CardTransaction[]>(INITIAL_TRANSIT_CARD.recentTransactions);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isLiveFeed, setIsLiveFeed] = useState(false);
 
   // Save favorites to localStorage
   useEffect(() => {
@@ -62,6 +63,90 @@ export default function App() {
       // Ignore
     }
   }, [favorites]);
+
+  // Fetch LTA Bus Arrival data from /api/bus-arrival
+  const fetchLtaBusArrivals = async (stopCode: string) => {
+    try {
+      const response = await fetch(`/api/bus-arrival?BusStopCode=${encodeURIComponent(stopCode)}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data && Array.isArray(data.Services)) {
+        setIsLiveFeed(data.liveFeed === true);
+        const now = Date.now();
+        const calcCountdown = (estIso?: string) => {
+          if (!estIso) return 0;
+          const diff = Math.floor((new Date(estIso).getTime() - now) / 1000);
+          return diff > 0 ? diff : 20;
+        };
+
+        const converted: BusServiceTiming[] = data.Services.map((item: any) => {
+          const srvNo = item.ServiceNo || 'BUS';
+          return {
+            serviceNo: srvNo,
+            operator: item.Operator || 'SBST',
+            destinationCode: item.NextBus?.DestinationCode || '17009',
+            destinationName: item.NextBus?.DestinationCode
+              ? `Interchange (${item.NextBus.DestinationCode})`
+              : 'Interchange Loop',
+            routeCategory: 'TRUNK',
+            nextBus: {
+              estimatedArrival: item.NextBus?.EstimatedArrival || 'Arr',
+              countdownSeconds: calcCountdown(item.NextBus?.EstimatedArrival),
+              load: (item.NextBus?.Load as any) || 'SEA',
+              feature: (item.NextBus?.Feature as any) || 'WAB',
+              type: (item.NextBus?.Type as any) || 'DD',
+              latitude: parseFloat(item.NextBus?.Latitude || '1.3000'),
+              longitude: parseFloat(item.NextBus?.Longitude || '103.8500'),
+              visitNumber: parseInt(item.NextBus?.VisitNumber || '1', 10),
+            },
+            nextBus2: item.NextBus2?.EstimatedArrival
+              ? {
+                  estimatedArrival: item.NextBus2.EstimatedArrival,
+                  countdownSeconds: calcCountdown(item.NextBus2.EstimatedArrival),
+                  load: (item.NextBus2?.Load as any) || 'SEA',
+                  feature: (item.NextBus2?.Feature as any) || 'WAB',
+                  type: (item.NextBus2?.Type as any) || 'DD',
+                  latitude: parseFloat(item.NextBus2?.Latitude || '1.3000'),
+                  longitude: parseFloat(item.NextBus2?.Longitude || '103.8500'),
+                  visitNumber: parseInt(item.NextBus2?.VisitNumber || '1', 10),
+                }
+              : undefined,
+            nextBus3: item.NextBus3?.EstimatedArrival
+              ? {
+                  estimatedArrival: item.NextBus3.EstimatedArrival,
+                  countdownSeconds: calcCountdown(item.NextBus3.EstimatedArrival),
+                  load: (item.NextBus3?.Load as any) || 'SEA',
+                  feature: (item.NextBus3?.Feature as any) || 'WAB',
+                  type: (item.NextBus3?.Type as any) || 'SD',
+                  latitude: parseFloat(item.NextBus3?.Latitude || '1.3000'),
+                  longitude: parseFloat(item.NextBus3?.Longitude || '103.8500'),
+                  visitNumber: parseInt(item.NextBus3?.VisitNumber || '1', 10),
+                }
+              : undefined,
+          };
+        });
+
+        if (converted.length > 0) {
+          setTimingsData((prev) => ({
+            ...prev,
+            [stopCode]: converted,
+          }));
+        }
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.warn('Could not fetch from /api/bus-arrival, using client telemetry:', err);
+    }
+  };
+
+  // Poll /api/bus-arrival every 20 seconds (as requested: "# Refreshes every 20 seconds")
+  useEffect(() => {
+    fetchLtaBusArrivals(selectedStop.code);
+    const pollInterval = setInterval(() => {
+      fetchLtaBusArrivals(selectedStop.code);
+    }, 20000);
+    return () => clearInterval(pollInterval);
+  }, [selectedStop.code]);
 
   // Real-time 1-second interval poll with tabular-nums countdown
   useEffect(() => {
@@ -117,6 +202,7 @@ export default function App() {
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
+    fetchLtaBusArrivals(selectedStop.code);
     setTimeout(() => {
       setLastUpdated(new Date());
       setIsRefreshing(false);
@@ -195,6 +281,7 @@ export default function App() {
         onOpenLegend={() => setIsLegendOpen(true)}
         onOpenCardModal={() => setIsCardModalOpen(true)}
         cardBalance={cardBalance}
+        isLiveFeed={isLiveFeed}
       />
 
       {/* Main Responsive Layout: 12-Column Grid baseline (Desktop) & Split 3:5 on Tablet */}

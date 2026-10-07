@@ -9,6 +9,7 @@ interface TopBarProps {
   onOpenLegend: () => void;
   onOpenCardModal: () => void;
   cardBalance: number;
+  isLiveFeed?: boolean;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -19,6 +20,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenLegend,
   onOpenCardModal,
   cardBalance,
+  isLiveFeed = false,
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-[#5B1B6A] text-white shadow-md">
@@ -31,6 +33,25 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
           <span className="font-heading font-extrabold text-base sm:text-lg tracking-tight text-white whitespace-nowrap">
             Civic Transit Pulse
+          </span>
+          <span
+            className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+              isLiveFeed
+                ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30'
+                : 'bg-white/10 text-white/70 border border-white/20'
+            }`}
+            title={
+              isLiveFeed
+                ? 'Connected directly to LTA DataMall v3 API'
+                : 'API endpoints active at /api/health and /api/bus-arrival. Add LTA_ACCOUNT_KEY in Vercel to enable live feed.'
+            }
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isLiveFeed ? 'bg-emerald-400 animate-live-pulse' : 'bg-amber-400'
+              }`}
+            />
+            {isLiveFeed ? 'LTA Live' : 'API Ready'}
           </span>
         </div>
 
